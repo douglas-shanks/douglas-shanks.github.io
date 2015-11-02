@@ -47,7 +47,7 @@
                         <!--<p>Mathematics PhD Research Student</p>-->
                     </header>
                     <a class="jumplink pic">
-                        <img src="doug.jpg" alt="" />
+                        <img src="images/150127_headshot.jpg" alt="" />
                     </a>
                 </article>
 
@@ -69,7 +69,8 @@
                     </header>
                     <!-- <p>
                         These are some publications and work from my time at university.
-                        
+                        </p> -->									
+
                         <h6>
                             <b>Written Work</b><br>
                             <a href="https://drive.google.com/file/d/0B0iSCqNs5-x9TmY2ZFFwZE43NEE/view?usp=sharing">&#128274; Current Thesis version (Draft)</a><br>
@@ -84,9 +85,6 @@
                             <a href="140410_Blake_Colorado.pdf">A Domain Decomposition Approach to Diffusion Synthetic Acceleration, 11/04/14</a><br>
                             <a href="TXT/Jack%20Blake%20-%20Presentation%20-%20The%20Idea%20Behind%20Krylov%20Methods.pdf">The Idea Behind Krylov Methods, 02/05/12</a><br>
                             <a href="TXT/Jack%20Blake%20-%20Presentation%20-%20Preconditioning%20of%20Iterative%20Methods%20for%20the%20Transport%20Equation.pdf">Preconditioning of Iterative Methods for the Transport Equation, 20/10/11</a><br>
-                            
-                            </p> -->									
-
                         </h6>
                 </article>
 

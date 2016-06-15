@@ -1,10 +1,8 @@
 ###########################################################################
 ===========================================================================
 
-Test code for Diff Solver.
-
 1D and 2D test programs to solve the heat equation
-with Dirichlet boundary conditions and initial condition, 
+with Dirichlet boundary conditions and initial condition 
 
 1D:
 
@@ -37,9 +35,8 @@ Usen openmp and MPI on 2D code.
 
 TO DO:
 
- - Finish parallel version using MPI (tick).
- - Add in Jacobi preconditioner for serial code (tick, reduces by at most 10% in the iterations :| ).
- - Add in Block Jacobi in the serial code.
+ - Finish parallel version using MPI (tick, issues with error.f90 but that's fine)
+ - Add in Jacobi preconditioner for serial code (tick, reduces by at most 10% in the iterations :| )
  - Add in Jacobi preconditioner for parallel code (issues with this, use the stuff from the serial code which works) 
  
- - generalise RHS and initial conditions
+ 

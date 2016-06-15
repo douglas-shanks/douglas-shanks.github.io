@@ -1,0 +1,79 @@
+!-----------------------------------------------------------
+!						BTCS
+!-----------------------------------------------------------
+
+  write(*,*)
+  write(*,*) '------------------------------------------------------------------'
+  print*,    ' BTCS Solution '
+  write(*,*) '------------------------------------------------------------------'
+  write(*,*)
+ 
+! Initial solution, u_0
+
+  call exactsoln2D(Ubtcs,alpha,0.0_8,m)
+  Ubtcs%xx = Ubtcs%xx(ibeg:iend)
+! Make BTCS matrix
+
+  call BTCSmatrix(Abtcs,alpha,tmax,m,Nt,ibeg,iend) 
+  
+	! now solve and produce output information 
+	 if (flag == 0) then
+	 
+	 	call cpu_time(t1)
+  		do j=2,Nt
+  		
+     	    call cg(Abtcs,y,Ubtcs,eps,kmax,its)
+     	    Ubtcs = y
+     	    
+  		end do
+  		call cpu_time(t2)
+  		
+     elseif (flag == 1) then	
+	 
+	 	call cpu_time(t1)
+  		do j=2,Nt
+  		
+     	    call Jacobi(Abtcs,y,Ubtcs,eps,kmax,its,myid)
+     	    Ubtcs = y
+    
+  		end do
+  		call cpu_time(t2)
+  		
+ 	 endif
+
+!  print out the solution
+
+  
+!  if (numprocs == 1)
+
+!  Uprint = 0.0_8    
+!  call FDsolution(Uprint,Ubtcs,m)
+  
+!  open(unit=2, file='ubtcs.txt', ACTION="write", STATUS="replace")
+!  write(2,*) m
+!  write(2,*) 
+!  write(2, *)( Uprint)
+!  close(2)
+  
+!  end if
+  
+! Compute the error
+
+  call norm(errorbtcs,Uexact,Ubtcs,m)
+
+  write(*,*) ' Error '
+  write(*,*)
+  print*, errorbtcs	 
+  write(*,*)
+  print*, ' time for solve'   
+  print'(f12.6)', t2-t1
+  write(*,*)
+  print*, ' Solver iterations'   
+  print*, its
+  
+  
+  
+  
+  
+
+

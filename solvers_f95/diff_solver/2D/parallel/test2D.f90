@@ -333,6 +333,7 @@ program test2D
 ! Make BTCS matrix  
   call BTCSmatrix(Abtcs,alpha,tmax,m,Nt,ibeg,iend) 
   
+    its_total = 0   
 	! now solve and produce output information 
 	 if (flag == 0) then
 	 
@@ -341,6 +342,7 @@ program test2D
   		
      	    call cg(Abtcs,y,Ubtcs,eps,kmax,its)
      	    Ubtcs = y
+     	    its_total = its_total + its 
      	    
   		end do
   		call cpu_time(t2)
@@ -355,6 +357,7 @@ program test2D
   		
      	    call pcg(Abtcs,y,Ubtcs,eps,kmax,its,P)
      	    Ubtcs = y
+     	    its_total = its_total + its 
      	    
   		end do
   		call cpu_time(t2)
@@ -366,7 +369,8 @@ program test2D
   		
      	    call Jacobi(Abtcs,y,Ubtcs,eps,kmax,its,myid)
      	    Ubtcs = y
-    
+    		its_total = its_total + its 
+    		
   		end do
   		call cpu_time(t2)
   		
@@ -400,8 +404,11 @@ program test2D
   	print*, ' time for solve'   
   	print'(f12.6)', t2-t1
   	write(*,*)
-  	print*, ' Solver iterations'   
-  	print*, its
+    print*, ' Solver iterations total'   
+    print*, its_total
+    print*, ' Average Solver iterations'
+    print*, its_total/Nt
+  	
   end if
 
 !=============================================================================
@@ -419,6 +426,7 @@ program test2D
 ! make the rhs
   call CNrhs(Acnrhs,alpha,tmax,m,Nt,ibeg,iend) 
     
+    its_total = 0
 	! now solve and produce output information
      if (flag == 0) then
      
@@ -429,7 +437,8 @@ program test2D
 	    call Mat_Mult(Acnrhs,x,y)
      	call cg(Acn,x,y,eps,kmax,its)
      	Ucn = x
-
+		its_total = its_total + its 
+		
         end do
         call cpu_time(t2)
         
@@ -441,7 +450,8 @@ program test2D
 	    call Mat_Mult(Acnrhs,x,y)
      	call Jacobi(Acn,x,y,eps,kmax,its,myid)
      	Ucn = x
-
+		its_total = its_total + its 
+		
         end do
         call cpu_time(t2)
     	
@@ -467,7 +477,8 @@ program test2D
   	write(*,*)
   	write(*,*) '========================================================================='
   	print*,    ' Crank Nicholson Solution '
-  	write(*,*) '========================================================================='
+  	write(*,*) ' Does not currently have a preconditioner' 
+  	write(*,*)'========================================================================='
   	write(*,*)
   	write(*,*) ' Error '
  	write(*,*)
@@ -476,8 +487,11 @@ program test2D
   	print*, ' time for solve'   
   	print'(f12.6)', t2-t1
   	write(*,*)
-  	print*, ' Solver iterations'   
-  	print*, its
+    print*, ' Solver iterations total'   
+    print*, its_total
+    print*, ' Average Solver iterations'
+    print*, its_total/Nt
+
   	
  	WRITE(*,*) '=========================================================================' 
  	WRITE(*,*) ' Program finished '

@@ -9,7 +9,7 @@ program test2D
   use header
   
   real (kind=8) :: eps
-  integer :: kmax, its
+  integer :: kmax, its, its_total
   parameter (eps = 1.0d-16, kmax = 1000)
   
   type(Matrix) ::   Aftcs, Acn, Acnrhs, Abtcs, Mbtcs, Mcn
@@ -31,7 +31,7 @@ WRITE(*,*)
   WRITE(*,*) ' This is a test program where we solve the 2D heat equation '
   WRITE(*,*) ' We compare the exact solution to that with the FTCS method '
   WRITE(*,*) ' BTCS method and Crank Nicholson method.'
-  WRITE(*,*) 'This version is written in parallel using MPI.'
+  WRITE(*,*) 'This version is sequential.'
   WRITE(*,*)
   WRITE(*,*) '========================================================================='
   WRITE(*,*)
@@ -215,7 +215,7 @@ WRITE(*,*)
 ! Make BTCS matrix
 
   call BTCSmatrix(Abtcs,alpha,tmax,m,Nt)
-  
+    its_total = 0
 	! now solve and produce output information 
 	 if (flag == 0) then
 	 
@@ -224,7 +224,7 @@ WRITE(*,*)
   		
      	    call cg(Abtcs,y,Ubtcs,eps,kmax,its)
      	    Ubtcs = y
-     	    
+     	    its_total = its_total + its 
   		end do
   		call cpu_time(t2)
   		
@@ -238,7 +238,7 @@ WRITE(*,*)
   		
      	    call pcg(Abtcs,y,Ubtcs,eps,kmax,its,Mbtcs)
      	    Ubtcs = y
-     	    
+     	    its_total = its_total + its 
   		end do
   		call cpu_time(t2)
   		
@@ -249,7 +249,7 @@ WRITE(*,*)
   		
      	    call Jacobi(Abtcs,y,Ubtcs,eps,kmax,its)
      	    Ubtcs = y
-    
+    		its_total = its_total + its 
   		end do
   		call cpu_time(t2)
   		
@@ -278,8 +278,11 @@ WRITE(*,*)
   print*, ' time for solve'   
   print'(f12.6)', t2-t1
   write(*,*)
-  print*, ' Solver iterations'   
-  print*, its
+  print*, ' Solver iterations total'   
+  print*, its_total
+  print*, ' Average Solver iterations'
+  print*, its_total/Nt
+
 
 !-----------------------------------------------------------
 !				Crank Nicholson
@@ -294,7 +297,7 @@ WRITE(*,*)
 ! make the rhs
 
   call CNrhs(Acnrhs,alpha,tmax,m,Nt)
-    
+    its_total = 0
 	! now solve and produce output information
      if (flag == 0) then
      
@@ -305,7 +308,7 @@ WRITE(*,*)
 	    call Mat_Mult(Acnrhs,x,y)
      	call cg(Acn,x,y,eps,kmax,its)
      	Ucn = x
-
+		its_total = its_total + its  
         end do
         call cpu_time(t2)
         
@@ -320,8 +323,8 @@ WRITE(*,*)
   		    x = Ucn
 	   		call Mat_Mult(Acnrhs,x,y)
      	    call pcg(Acn,x,y,eps,kmax,its,Mcn)
-     	    Ubtcs = y
-     	    
+     	    Ucn = x
+     	    its_total = its_total + its 
   		end do
   		call cpu_time(t2)
   		        
@@ -333,7 +336,7 @@ WRITE(*,*)
 	    call Mat_Mult(Acnrhs,x,y)
      	call Jacobi(Acn,x,y,eps,kmax,its)
      	Ucn = x
-
+		its_total = its_total + its 
         end do
         call cpu_time(t2)
      	
@@ -368,8 +371,10 @@ WRITE(*,*)
   print*, ' time for solve'   
   print'(f12.6)', t2-t1
   write(*,*)
-  print*, ' Solver iterations'   
-  print*, its
+  print*, ' Solver iterations total'   
+  print*, its_total
+  print*, ' Average Solver iterations'
+  print*, its_total/Nt
 
 ! Deallocate memory
 

@@ -40,9 +40,17 @@ program test2D
 
   call MPI_Init(ierr)
   call MPI_Comm_rank(MPI_COMM_WORLD, myid, ierr)
-  call MPI_Comm_size(MPI_COMM_WORLD, numprocs, ierr)	
-  call greetings(myid,numprocs) 
+  call MPI_Comm_size(MPI_COMM_WORLD, numprocs, ierr)
 
+  call greetings(myid,numprocs) 
+ 
+  call MPI_Pack_size(2,MPI_INTEGER, &
+                     & MPI_COMM_WORLD,size1,ierr);
+  call MPI_Pack_size(2,MPI_DOUBLE_PRECISION, &
+                     & MPI_COMM_WORLD,size2,ierr);
+
+  size = size1 + size2
+  position = 0
   
 !=============================================================================
 
@@ -90,7 +98,7 @@ program test2D
  	 	print *, "N and Nt must be positive "
  	 	stop
   	endif
-     
+  
   ! Mesh spacing for time and space
 
   	hx = 1.0_8/real(m-1,8)
@@ -105,22 +113,37 @@ program test2D
   	if (R1 >= 0.25_8) then
 		 print *, "Cannot guarantee stability for FTCS "
   	endif
-
+  
+  	call MPI_Pack(alpha,1,MPI_DOUBLE_PRECISION, &
+    	      & buffer,100,position,MPI_COMM_WORLD,ierr);
+  	call MPI_Pack(m,1,MPI_INTEGER, &
+    	      & buffer,100,position,MPI_COMM_WORLD,ierr);
+  	call MPI_Pack(tmax,1,MPI_DOUBLE_PRECISION, &
+    	      & buffer,100,position,MPI_COMM_WORLD,ierr);
+  	call MPI_Pack(Nt,1,MPI_INTEGER, &
+    	      & buffer,100,position,MPI_COMM_WORLD,ierr);
   end if 
          
 !=============================================================================
 !      Broadcast alpha, m, tmax and Nt to the other processes
 !=============================================================================
- ! I should just pack this all in a buffer!
- 
-  call MPI_Bcast(alpha,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
-  call MPI_Bcast(tmax,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
-  call MPI_Bcast(m,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
-  call MPI_Bcast(Nt,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
-  call MPI_Bcast(flag,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
 
-  if (m==0) stop
+    call MPI_Bcast(buffer,size,MPI_PACKED,0,MPI_COMM_WORLD,ierr);
+    
+!=============================================================================
+!         Unpack to slaves
+!=============================================================================
 
+  if (myid > 0) then
+     call MPI_Unpack(buffer,100,position,alpha,1, &
+          & MPI_DOUBLE_PRECISION,MPI_COMM_WORLD,ierr);
+     call MPI_Unpack(buffer,100,position,m,1, &
+          & MPI_INTEGER,MPI_COMM_WORLD,ierr);
+     call MPI_Unpack(buffer,100,position,tmax,1, &
+          & MPI_DOUBLE_PRECISION,MPI_COMM_WORLD,ierr);
+     call MPI_Unpack(buffer,100,position,Nt,1, &
+          & MPI_INTEGER,MPI_COMM_WORLD,ierr);
+  end if
 
 ! Total grid points, not including Dirichlet boundary
 
@@ -401,6 +424,93 @@ program test2D
  	WRITE(*,*) '========================================================================='
  	
   end if
+
+!=============================================================================
+!				Crank Nicholson
+!=============================================================================
+
+! Initial solution, u_0
+!  call exactsoln2D(Ucn,alpha,0.0_8,m)
+
+! Make CN matrix and RHS 
+!  call CNmatrix(Acn,alpha,tmax,m,Nt,ibeg,iend) 
+  
+! make the rhs
+!  call CNrhs(Acnrhs,alpha,tmax,m,Nt,ibeg,iend) 
+    
+!    its_total = 0
+	! now solve and produce output information
+!     if (flag == 0 .Or. flag ==1) then
+     
+!     	call cpu_time(t1)
+!  		do j=2,Nt
+    
+!        x = Ucn
+!	    call Mat_Mult(Acnrhs,x,y)
+!     	call cg(Acn,x,y,eps,kmax,its)
+!     	Ucn = x
+!		its_total = its_total + its 
+		
+!        end do
+!        call cpu_time(t2)
+     !elseif (flag ==1) then
+     
+      !  print*, 'Error not implemented'
+        
+!     elseif (flag == 2) then	
+!        call cpu_time(t1)
+!  		do j=2,Nt
+    
+!        x = Ucn
+!	    call Mat_Mult(Acnrhs,x,y)
+!     	call Jacobi(Acn,x,y,eps,kmax,its,myid)
+!     	Ucn = x
+!		its_total = its_total + its 
+		
+!        end do
+!        call cpu_time(t2)
+    	
+! 	 endif
+
+!  print out the solution
+
+!  Uprint = 0.0_8    
+!  call FDsolution(Uprint,Ucn,m)
+  
+!  open(unit=2, file='ucn.txt', ACTION="write", STATUS="replace")
+!  write(2,*) m
+!  write(2,*) 
+!  write(2, *)( Uprint)
+!  close(2) 
+  
+! Compute the error
+!  call exactsoln2D(Uexact,alpha,tmax,m)
+!  call error(Uexact,Ucn,errorcn)
+  
+!   if (myid == 0) then 
+  
+!  	write(*,*)
+ ! 	write(*,*) '========================================================================='
+!  	print*,    ' Crank Nicholson Solution '
+!  	write(*,*) ' Does not currently have a preconditioner' 
+!  	write(*,*)'========================================================================='
+!  	write(*,*)
+!  	write(*,*) ' Error '
+! 	write(*,*)
+!  	print*, errorcn	 
+!  	write(*,*)
+!  	print*, ' time for solve'   
+!  	print'(f12.6)', t2-t1
+!  	write(*,*)
+!    print*, ' Solver iterations total'   
+!    print*, its_total
+!    print*, ' Average Solver iterations'
+!    print*, NINT(real(its_total/(Nt-1)))
+!  end if
+  	
+
+ 
+
 
 ! Deallocate memory
 

@@ -8,8 +8,7 @@ subroutine sparsegather(x,BW)
  integer, intent(in) :: BW
 
  integer :: myid,numprocs,stat(MPI_STATUS_SIZE),ierr
-
-
+ 
  call MPI_Comm_rank(MPI_COMM_WORLD, myid, ierr)
  call MPI_Comm_size(MPI_COMM_WORLD, numprocs, ierr)
 

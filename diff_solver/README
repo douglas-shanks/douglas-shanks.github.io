@@ -35,8 +35,8 @@ Usen openmp and MPI on 2D code.
 
 TO DO:
 
- - Finish parallel version using MPI (tick)
- - Add in Jacobi preconditioner for serial code (tick, reduces by at most 10% in the iterations as expected )
+ - Finish parallel version using MPI (tick, issues with error.f90 but that's fine)
+ - Add in Jacobi preconditioner for serial code (tick, reduces by at most 10% in the iterations :| )
  - Add in Jacobi preconditioner for parallel code (issues with this, use the stuff from the serial code which works) 
  
  

@@ -3,7 +3,7 @@
 !
 ! -----------------------------------------------------------------------
 
-subroutine pcg(A,u,b,tol,maxits,its,M)
+subroutine pcg(A,u,b,tol,maxits,its,M,pre_coeff)
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !     Arguments:
@@ -22,15 +22,15 @@ subroutine pcg(A,u,b,tol,maxits,its,M)
 !         its        number of iterations
 !
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
+  
+  
   use header
-
-  implicit none
+  include "mpif.h"
 
   type(Matrix), intent(in)    :: A, M
   type(Vector), intent(inout) :: u
   type(Vector), intent(in)    :: b
-  real(kind=8), intent(in) :: tol
+  real(kind=8), intent(in) :: tol,pre_coeff
   integer, intent(in)  :: maxits
   integer, intent(out) :: its
 
@@ -39,12 +39,13 @@ subroutine pcg(A,u,b,tol,maxits,its,M)
 
   type(Vector) :: p
   type(Vector) :: q
-  type(Vector) :: r, z
+  type(Vector) :: r 
+  type(Vector) :: z
   real(kind=8) :: rtr,alpha,beta,gamma,delta,norm,norm0
   integer      :: n_loc, ierr
 
   n_loc = b%iend - b%ibeg + 1
-
+  
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 !     Allocate memory for additional vectors p, q and r
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -77,12 +78,13 @@ subroutine pcg(A,u,b,tol,maxits,its,M)
   u%xx(u%ibeg:u%iend) = zero
   z%xx(u%ibeg:u%iend) = zero
   
+  ! r = b- A*x_0
   call dcopy(n_loc,b%xx(u%ibeg),1,r%xx(u%ibeg),1)
   
   ! z = M^{-1}r
   call Mat_Mult(M,r,z)
-  
-  call dcopy(n_loc,z%xx(u%ibeg),1,p%xx(u%ibeg),1)
+
+  call dcopy(n_loc,z%xx(z%ibeg),1,p%xx(u%ibeg),1)
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !     Calculate initial residual norm and stop if small enough
@@ -126,7 +128,7 @@ subroutine pcg(A,u,b,tol,maxits,its,M)
      call dscal(n_loc,beta,p%xx(p%ibeg),1)
      
      ! p_{k+1} = z_{k+1} + b_{k}*p_{k}
-     call daxpy(n_loc,one,z%xx(r%ibeg),1,p%xx(p%ibeg),1)
+     call daxpy(n_loc,one,z%xx(z%ibeg),1,p%xx(p%ibeg),1)
 
   end do
 

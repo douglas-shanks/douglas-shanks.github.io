@@ -70,8 +70,8 @@ subroutine cg(A,u,b,tol,maxits,its)
 
   u%xx(u%ibeg:u%iend) = zero
 
-  call dcopy(n_loc,b%xx(u%ibeg),1,r%xx(u%ibeg),1)
-  call dcopy(n_loc,b%xx(u%ibeg),1,p%xx(u%ibeg),1)
+  call dcopy(n_loc,b%xx(b%ibeg),1,r%xx(r%ibeg),1)
+  call dcopy(n_loc,b%xx(b%ibeg),1,p%xx(p%ibeg),1)
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !     Calculate initial residual norm and stop if small enough

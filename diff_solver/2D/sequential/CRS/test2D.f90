@@ -281,7 +281,7 @@ WRITE(*,*)
   print*, ' Solver iterations total'   
   print*, its_total
   print*, ' Average Solver iterations'
-  print*, its_total/Nt
+  print*, NINT(real(its_total/(Nt-1)))
 
 
 !-----------------------------------------------------------
@@ -328,7 +328,7 @@ WRITE(*,*)
   		end do
   		call cpu_time(t2)
   		        
-     elseif (flag == 1) then	
+     elseif (flag == 2) then	
         call cpu_time(t1)
   		do j=2,Nt
     
@@ -374,7 +374,7 @@ WRITE(*,*)
   print*, ' Solver iterations total'   
   print*, its_total
   print*, ' Average Solver iterations'
-  print*, its_total/Nt
+  print*, NINT(real(its_total/(Nt-1)))
 
 ! Deallocate memory
 

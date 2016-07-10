@@ -28,15 +28,10 @@ and CN solution. The 2 norm of the error is then computed for each and wall cloc
 
 TODO:
 
-Usen openmp and MPI on 2D code.
+Thread the parallel code using openMP
 
 ============================================================================
 ############################################################################
 
-TO DO:
-
- - Finish parallel version using MPI (tick, issues with error.f90 but that's fine)
- - Add in Jacobi preconditioner for serial code (tick, reduces by at most 10% in the iterations :| )
- - Add in Jacobi preconditioner for parallel code (issues with this, use the stuff from the serial code which works) 
  
  

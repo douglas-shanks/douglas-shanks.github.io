@@ -1,8 +1,7 @@
 
 F95       = mpif90 
 FLAGS     =
-LIB_LIST  =
-
+LIB_LIST  =-llapack -lblas
 all: test_steady
 
 greetings.o: greetings.f90
@@ -19,9 +18,15 @@ sysmatrix.o: sysmatrix.f90 header.o
 
 rhs.o: rhs.f90 header.o
 	$(F95) $(OPT) -c rhs.f90
-		
+	
+cg.o: cg.f90 header.o
+	$(F95) $(OPT) -c cg.f90
+	
 alpha.o: alpha.f90 header.o
 	$(F95) $(OPT) -c alpha.f90	
+
+vecdot.o: vecdot.f90 header.o
+	$(F95) $(OPT) -c vecdot.f90	
 	
 error.o: error.f90 header.o
 	$(F95) $(OPT) $(FLAGS) -c error.f90
@@ -35,8 +40,8 @@ jacobi.o: jacobi.f90 header.o
 test_steady.o: test_steady.f90 header.o
 	$(F95) $(OPT) $(FLAGS) -c test_steady.f90
 
-test_steady: greetings.o sparsegather.o header.o error.o matmult.o sysmatrix.o rhs.o jacobi.o test_steady.o alpha.o
-	 $(F95) $(OPT) -o test_steady greetings.o header.o sparsegather.o error.o matmult.o sysmatrix.o rhs.o jacobi.o test_steady.o alpha.o$(LIB_LIST)
+test_steady: greetings.o sparsegather.o header.o error.o matmult.o sysmatrix.o rhs.o cg.o jacobi.o test_steady.o alpha.o vecdot.o
+	 $(F95) $(OPT) -o test_steady greetings.o header.o sparsegather.o error.o matmult.o sysmatrix.o rhs.o cg.o jacobi.o test_steady.o alpha.o vecdot.o $(LIB_LIST)
 
 clean: 
 	rm -rf *~ *.o *.mod core  

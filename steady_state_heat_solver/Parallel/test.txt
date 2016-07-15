@@ -7,6 +7,8 @@
 ! and assortment of linear solvers are used
 !=============================================================
 
+! This version didn't use buffers. Jacobi still doesnt scale when numprocs--> infty
+
 program test_steady
 
   use header
@@ -23,9 +25,7 @@ program test_steady
   integer       :: m
   integer       :: myid, nprocs, nrows, ibeg, iend
   integer       :: ierr
-  integer		:: position,size,size1,size2
-  character*(100) :: buffer
-  
+
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !      Beginning of program - Initialisation of MPI context
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -34,15 +34,6 @@ program test_steady
   call MPI_Comm_rank(MPI_COMM_WORLD, myid, ierr)
   call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr)
 
- 
-  call MPI_Pack_size(1,MPI_INTEGER, &
-                     & MPI_COMM_WORLD,size1,ierr);
-  call MPI_Pack_size(1,MPI_DOUBLE_PRECISION, &
-                     & MPI_COMM_WORLD,size2,ierr);
-
-  size = size1 + size2
-  position = 0
-  
   !call greetings(myid,nprocs)
 
   if ( myid == 0 ) then
@@ -55,35 +46,16 @@ program test_steady
 !        print*,'(m-1)*(m-1) has to be a multiple of nprocs =',nprocs
 !        m = 0
 !     end if
-
-     close(2)
-     
-     call MPI_Pack(sigma,1,MPI_DOUBLE_PRECISION, &
-          & buffer,100,position,MPI_COMM_WORLD,ierr);
-          
-     call MPI_Pack(m,1,MPI_INTEGER, &
-          & buffer,100,position,MPI_COMM_WORLD,ierr);
-          
   end if
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !      Broadcast m to the other processes
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
-   call MPI_Bcast(buffer,size,MPI_PACKED,0,MPI_COMM_WORLD,ierr);
-   
-  !call MPI_Bcast(m,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
-  !call MPI_Bcast(sigma,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
-  !if (m==0) stop
-  
-  if (myid > 0) then
-  
-     call MPI_Unpack(buffer,100,position,sigma,1, &
-          & MPI_DOUBLE_PRECISION,MPI_COMM_WORLD,ierr);
-     call MPI_Unpack(buffer,100,position,m,1, &
-          & MPI_INTEGER,MPI_COMM_WORLD,ierr);
-          
-  end if
+  call MPI_Bcast(m,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+  call MPI_Bcast(sigma,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+  if (m==0) stop
+
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !      Calculate the start and end indices of the rows to be held locally
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -139,12 +111,13 @@ program test_steady
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 !     Apply Jacobi's method to solve the system
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
  t1 = MPI_Wtime()
  
  call Jacobi(A,u,b,eps,kmax,its,myid)
  
  t2 = MPI_Wtime()
+
+
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 !     Check the error
@@ -165,37 +138,7 @@ program test_steady
 	 
 	 write(6,*)  "Elapsed time (s) is ", t2 - t1 
   end if
-  
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-!     Apply CG to solve the system
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
- t1 = MPI_Wtime()
- 
- call cg(A,u,b,eps,kmax,its)
- 
- t2 = MPI_Wtime()
-
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-!     Check the error for CG
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-  call Error(u,u_ex,norm)
-  
-  if (myid == 0) then
-     if (its > kmax) then
-        write(*,200) kmax,norm
-     else
-        write(*,210) its,norm
-     endif
-
-200  format('Maximum number of iterations (',i5,          &
-    &       ') reached, norm of the error is ',e10.4)
-210  format('After ',i5,' iterations the norm of the error is ',e10.4)
-	 
-	 write(6,*)  "Elapsed time (s) is ", t2 - t1 
-  end if
-  	
+	
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 !     Deallocate memory
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

@@ -1,6 +1,6 @@
 !==========================================================================
 !
-!  Subroutine to make the system matrix for the 2-D, five-point stencil 
+!  Subroutine to make the jacobi preconditioning matrix for the 2-D, five-point stencil 
 !  of a general 2nd-order elliptic PDE in compressed row storage format 
 !  (parallel version).
 !  The discretied PDE
@@ -8,7 +8,7 @@
 !									  U = 0,  on D
 !==========================================================================
 
-subroutine sysmatrix(A,m,ibeg,iend,sigma)
+subroutine sysmatrix_pre(A,m,ibeg,iend,sigma)
 
   use header
 
@@ -16,7 +16,7 @@ subroutine sysmatrix(A,m,ibeg,iend,sigma)
   integer, intent(in) :: m,ibeg,iend
 
   integer :: row,col,i,j,inz,c
-  real(kind=8) :: xm,xp,ym,yp, sigma
+  real(kind=8) :: xm,xp,ym,yp, sigma, V
 
   interface
     function alpha(x,y) result (val)
@@ -50,50 +50,13 @@ subroutine sysmatrix(A,m,ibeg,iend,sigma)
      yp = (j+0.5d0)/m
 
      inz = inz + 1
-
-     A%aa(inz) = c * (alpha(xm,ym) + alpha(xp,ym) + alpha(xm,yp) + alpha(xp,yp)) + sigma
+	 
+	 V = 1.0_8 / ( c * (alpha(xm,ym) + alpha(xp,ym) + alpha(xm,yp) + alpha(xp,yp)) + sigma )
+	 
+     A%aa(inz) = V
      A%ii(row) = inz
      A%jj(inz) = row
-
-! If i = 1 then there is no (geometric) left neighbour, thus no entry
-
-     if (i > 1) then
-        col = row - 1  
-        inz = inz + 1
-     
-        A%aa(inz) = -0.5d0 * c * (alpha(xm,ym) + alpha(xm,yp))
-        A%jj(inz) = col
-     endif
-
-! If i = m-1 then there is no (geometric) right neighbour, thus no entry
-
-     if (i < m-1) then
-        col = row + 1  
-        inz = inz + 1
-     
-        A%aa(inz) = -0.5d0 * c * (alpha(xp,ym) + alpha(xp,yp))
-        A%jj(inz) = col
-     endif
-
-! If j = 1 then there is no (geometric) lower neighbour, thus no entry
-
-     if (j > 1) then
-        col = row - m + 1 
-        inz = inz + 1
-     
-        A%aa(inz) = -0.5d0 * c * (alpha(xm,ym) + alpha(xp,ym))
-        A%jj(inz) = col
-     endif
-
-! If j = m-1 then there is no (geometric) upper neighbour, thus no entry
-
-     if (j < m-1) then
-        col = row + m - 1
-        inz = inz + 1
-     
-        A%aa(inz) = -0.5d0 * c * (alpha(xm,yp) + alpha(xp,yp))
-        A%jj(inz) = col
-     endif
+  
   end do
  
 ! Set A%n (the dimension of A), A%nnz (the number of nonzero entries) and
@@ -104,4 +67,4 @@ subroutine sysmatrix(A,m,ibeg,iend,sigma)
   A%nnz  = inz
   A%ii(iend+1) = A%nnz + 1
 
-end subroutine sysmatrix
+end subroutine sysmatrix_pre

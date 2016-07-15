@@ -17,9 +17,10 @@ program test_steady
   parameter (eps = 1.0d-8, kmax = 9999)
   real(kind=8) t1, t2; 
 
-  type(Matrix)  :: A
+  type(Matrix)  :: A, P
   type(Vector)  :: u, u_ex, b
   real (kind=8) :: norm
+  real(kind=8), dimension(:,:), allocatable :: Uprint
   integer       :: m
   integer       :: myid, nprocs, nrows, ibeg, iend
   integer       :: ierr
@@ -98,6 +99,8 @@ program test_steady
 !     Allocate memory for A, u, u_ex and b and set dimensions
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+  allocate(Uprint(m-1,m-1))	
+  
   allocate(A%aa(5*nrows))
   allocate(A%jj(5*nrows))
   allocate(A%ii(n+1))
@@ -105,6 +108,14 @@ program test_steady
   A%n    = n
   A%ibeg = ibeg
   A%iend = iend
+
+  allocate(P%aa(5*nrows))
+  allocate(P%jj(5*nrows))
+  allocate(P%ii(n+1))
+
+  P%n    = n
+  P%ibeg = ibeg
+  P%iend = iend
 
   allocate(u%xx(n))
   allocate(b%xx(n))
@@ -195,14 +206,62 @@ program test_steady
 	 
 	 write(6,*)  "Elapsed time (s) is ", t2 - t1 
   end if
-  	
+ ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+!     Apply PCG to solve the system
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+ its = 0
+ call sysmatrix_pre(P,m,ibeg,iend,sigma,P)
+ 
+ t1 = MPI_Wtime()
+ 
+ call pcg(A,u,b,eps,kmax,its,P)
+ 
+ t2 = MPI_Wtime()
+
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+!     Check the error for PCG
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+  call Error(u,u_ex,norm)
+  
+  if (myid == 0) then
+     if (its > kmax) then
+        write(*,300) kmax,norm
+     else
+        write(*,310) its,norm
+     endif
+
+300  format('Maximum number of iterations (',i5,          &
+    &       ') reached, norm of the error is ',e10.4)
+310  format('After ',i5,' iterations the norm of the error is ',e10.4)
+	 
+	 write(6,*)  "Elapsed time (s) is ", t2 - t1 
+  end if 	
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 !     Deallocate memory
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+!     Write the solution to a file for postprocessing in Matlab
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+  if (nprocs == 1) then
+  	  	call FDsolution(Uprint,u,m)
+
+  		open(unit=2, file='solution.txt', ACTION="write", STATUS="replace")
+  		write(2,*)  m
+  		write(2,*) 
+  		write(2, *) Uprint
+  		close(2)
+  end if		
+
+  deallocate(Uprint)
   deallocate(A%aa)
   deallocate(A%jj)
   deallocate(A%ii)
+  deallocate(P%aa)
+  deallocate(P%jj)
+  deallocate(P%ii)
   deallocate(u_ex%xx)
   deallocate(u%xx)
   deallocate(b%xx)

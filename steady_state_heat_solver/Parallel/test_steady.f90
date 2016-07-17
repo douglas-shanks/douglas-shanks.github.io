@@ -195,8 +195,6 @@ program test_steady
 !     Check the error for CG
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
- its = 0
- 
   call Error(u,u_ex,norm)
   
   if (myid == 0) then
@@ -215,8 +213,6 @@ program test_steady
  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 !     Apply PCG to solve the system
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
- its = 0
  
  call sysmatrix_pre(P,m,ibeg,iend,sigma,P)
  

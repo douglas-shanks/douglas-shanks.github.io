@@ -19,8 +19,10 @@ program test_steady
 
   type(Matrix)  :: A, P
   type(Vector)  :: u, u_ex, b
+  
   real (kind=8) :: norm
   real(kind=8), dimension(:,:), allocatable :: Uprint
+  
   integer       :: m
   integer       :: myid, nprocs, nrows, ibeg, iend
   integer       :: ierr
@@ -144,7 +146,9 @@ program test_steady
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
   call random_number(u_ex%xx(ibeg:iend))
-
+  
+  !call rhs(b,m)
+  
   call Mat_Mult(A,u_ex,b)
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -172,7 +176,7 @@ program test_steady
 
 100  format('Maximum number of iterations (',i5,          &
     &       ') reached, norm of the error is ',e10.4)
-110  format('After ',i5,' iterations the norm of the error is ',e10.4)
+110  format('After ',i5,' Jacobi iterations the norm of the error is ',e10.4)
 	 
 	 write(6,*)  "Elapsed time (s) is ", t2 - t1 
   end if
@@ -191,6 +195,8 @@ program test_steady
 !     Check the error for CG
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+ its = 0
+ 
   call Error(u,u_ex,norm)
   
   if (myid == 0) then
@@ -202,14 +208,16 @@ program test_steady
 
 200  format('Maximum number of iterations (',i5,          &
     &       ') reached, norm of the error is ',e10.4)
-210  format('After ',i5,' iterations the norm of the error is ',e10.4)
+210  format('After ',i5,' CG iterations the norm of the error is ',e10.4)
 	 
 	 write(6,*)  "Elapsed time (s) is ", t2 - t1 
   end if
  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 !     Apply PCG to solve the system
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
  its = 0
+ 
  call sysmatrix_pre(P,m,ibeg,iend,sigma,P)
  
  t1 = MPI_Wtime()
@@ -233,7 +241,7 @@ program test_steady
 
 300  format('Maximum number of iterations (',i5,          &
     &       ') reached, norm of the error is ',e10.4)
-310  format('After ',i5,' iterations the norm of the error is ',e10.4)
+310  format('After ',i5,' PCG iterations the norm of the error is ',e10.4)
 	 
 	 write(6,*)  "Elapsed time (s) is ", t2 - t1 
   end if 	
